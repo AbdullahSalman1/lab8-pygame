@@ -14,9 +14,10 @@ import pygame
 WIDTH = 800
 HEIGHT = 600
 FPS = 60
-SQUARE_COUNT = 100
-SQUARE_SIZE = 10
-MAX_SPEED = 4
+SQUARE_COUNT = 15
+MIN_SIZE = 20
+MAX_SIZE = 80
+MAX_SPEED = 8  # Increase max speed for small boxes
 BACKGROUND_COLOR = (25, 25, 35)
 
 
@@ -43,11 +44,14 @@ def create_square() -> dict:
 
     TODO: Prevent squares from spawning on top of each other.
     """
-    size = SQUARE_SIZE
+    size = random.randint(MIN_SIZE, MAX_SIZE)
     x = random.uniform(0, WIDTH - size)
     y = random.uniform(0, HEIGHT - size)
-    vx = random.choice([-1, 1]) * random.uniform(1, MAX_SPEED)
-    vy = random.choice([-1, 1]) * random.uniform(1, MAX_SPEED)
+    # Speed inversely proportional to size (smaller = faster, bigger = slower)
+    # Scale so min size gets MAX_SPEED, max size gets min speed (e.g., 1)
+    speed = ((MAX_SIZE - size) / (MAX_SIZE - MIN_SIZE)) * (MAX_SPEED - 1) + 1
+    vx = random.choice([-1, 1]) * speed
+    vy = random.choice([-1, 1]) * speed
 
     return {
         "x": x,
