@@ -13,4 +13,9 @@ help me implement this with stubs and todos
 - **Context and Reasons for Changes**: The user requested a simple implementation with stubs and TODOs, so the code is intentionally modular and beginner-friendly while remaining executable.
 
 
+    
 
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 07-04-2026 11:29
+- **Prompt**: heres what i am thinking to make the smaller squares flee away from the bigger ones. donot give me th full solution just help me learn how to do it progressively
