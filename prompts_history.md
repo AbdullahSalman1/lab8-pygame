@@ -11,3 +11,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 07-04-2026 11:32
 - **Prompt**: implement these todos and stubbed functions in my code
 
+### 09-04-2026 14:17
+- **Prompt**: turn on the socratic mode
+
