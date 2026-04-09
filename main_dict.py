@@ -1,8 +1,3 @@
-"""Dictionary-based Pygame demo: 10 squares move randomly on a canvas.
-
-This version uses dictionaries instead of classes/dataclasses.
-"""
-
 from __future__ import annotations
 
 import random
@@ -10,11 +5,70 @@ import random
 import pygame
 
 
+def calculate_distance(pos1: tuple[float, float], pos2: tuple[float, float]) -> float:
+    """Calculate the distance between two positions."""
+    dx = pos1[0] - pos2[0]
+    dy = pos1[1] - pos2[1]
+    return (dx**2 + dy**2) ** 0.5
+    
+
+
+    
+
+
+def should_flee(small_square: dict, big_square: dict, flee_radius: float) -> bool:
+    """Determine if the small square should flee from the big square."""
+
+    small_pos = (small_square["x"] + small_square["size"] / 2, small_square["y"] + small_square["size"] / 2)
+    big_pos = (big_square["x"] + big_square["size"] / 2, big_square["y"] + big_square["size"] / 2)
+
+    distance = calculate_distance(small_pos, big_pos)
+    return distance < flee_radius
+
+   
+
+    
+    
+    
+
+
+def flee_away(small_square: dict, big_square: dict) -> None:
+    """
+    Update the small square's velocity to move away from the big square.
+    TODO: Change small_square's direction away from big_square.
+    """
+    small_pos = (small_square["x"] + small_square["size"] / 2, small_square["y"] + small_square["size"] / 2)
+    big_pos = (big_square["x"] + big_square["size"] / 2, big_square["y"] + big_square["size"] / 2)
+
+    dx = small_pos[0] - big_pos[0]
+    dy = small_pos[1] - big_pos[1]
+
+    # Normalize the direction vector
+    distance = calculate_distance(small_pos, big_pos)
+    if distance == 0:
+        return  # Avoid division by zero
+
+    norm_dx = dx / distance
+    norm_dy = dy / distance
+
+    # Scale by the small square's speed
+    speed = ((MAX_SIZE - small_square["size"]) / (MAX_SIZE - MIN_SIZE)) * (MAX_SPEED - 1) + 1
+    small_square["vx"] = norm_dx * speed
+    small_square["vy"] = norm_dy * speed
+    
+"""Dictionary-based Pygame demo: 10 squares move randomly on a canvas.
+
+This version uses dictionaries instead of classes/dataclasses.
+"""
+
+
+
+
 # Window and simulation constants
 WIDTH = 800
 HEIGHT = 600
-FPS = 60
-SQUARE_COUNT = 15
+FPS = 100
+SQUARE_COUNT = 25
 MIN_SIZE = 20
 MAX_SIZE = 80
 MAX_SPEED = 8  # Increase max speed for small boxes
@@ -45,6 +99,7 @@ def create_square() -> dict:
     TODO: Prevent squares from spawning on top of each other.
     """
     size = random.randint(MIN_SIZE, MAX_SIZE)
+
     x = random.uniform(0, WIDTH - size)
     y = random.uniform(0, HEIGHT - size)
     # Speed inversely proportional to size (smaller = faster, bigger = slower)
@@ -79,7 +134,7 @@ def update_square(square: dict) -> None:
     square["x"] += square["vx"]
     square["y"] += square["vy"]
 
-    # Horizontal bounce
+    # Horizontal bounceclesr
     if square["x"] <= 0:
         square["x"] = 0
         square["vx"] *= -1
@@ -139,6 +194,17 @@ def run() -> None:
     running = True
     while running:
         running = handle_events()
+
+        # Flee logic
+        for small in squares:
+            for big in squares:
+               if small is big:
+                continue
+
+            # Only flee from bigger squares
+               if small["size"] < big["size"]:
+                    if should_flee(small, big, flee_radius=120):
+                        flee_away(small, big)
 
         for square in squares:
             update_square(square)
