@@ -17,3 +17,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 09-04-2026 14:18
 - **Prompt**: I tried to impelment the flee functionality can you just go through my code
 
+### 09-04-2026 14:18
+- **Prompt**: Make the smaller squares flee away from the bigger ones All squares tend to keep a certain randomness to their behavior / trajectory
+

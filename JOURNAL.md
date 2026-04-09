@@ -39,3 +39,8 @@ help me implement this with stubs and todos
 - **Hook Version**: 1.02
 - **Date**: 09-04-2026 14:18
 - **Prompt**: I tried to impelment the flee functionality can you just go through my code
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 09-04-2026 14:18
+- **Prompt**: Make the smaller squares flee away from the bigger ones All squares tend to keep a certain randomness to their behavior / trajectory
