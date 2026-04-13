@@ -1,4 +1,14 @@
 ### **New Interaction**
+- **Agent Version**: 2.3
+- **Date**: 13-04-2026 14:16
+- **User**: abdullah.salman@epita.fr
+- **Prompt**: Ensure that the JOURNAL.md file is present in the workspace root. If it is missing, create it. From now on, after every user interaction, append a new entry at the end of JOURNAL.md using the template from .github/agents/journal-logger.agent.md. Log even if no code changes occurred, noting 'no changes' when applicable. Maintain strict chronological order (oldest first). Do not notify the user unless explicitly asked about the journal or if logging fails.
+- **CoPilot Mode**: Agent
+- **CoPilot Model**: GPT-4.1
+- **Socratic Mode**: ON
+- **Changes Made**: No changes (journal logger activation and verification only)
+- **Context and Reasons for Changes**: User requested to ensure JOURNAL.md exists and to activate journal logging for all future interactions. No code or project changes were made.
+### **New Interaction**
 - **Agent Version**: 2.2
 - **Date**: 30-03-2026 14:12
 - **User**: abdullah.salman@epita.fr
@@ -54,3 +64,8 @@ help me implement this with stubs and todos
 - **Hook Version**: 1.02
 - **Date**: 13-04-2026 14:14
 - **Prompt**: Ensure that the JOURNAL.md file is present in the workspace root. If it is missing, create it. From now on, after every user interaction, append a new entry at the end of JOURNAL.md using the template from .github/agents/journal-logger.agent.md. Log even if no code changes occurred, noting 'no changes' when applicable. Maintain strict chronological order (oldest first). Do not notify the user unless explicitly asked about the journal or if logging fails.
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 13-04-2026 14:19
+- **Prompt**: read #file:copilot-instructions.md and #file:journal-logger.agent.md
