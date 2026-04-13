@@ -29,3 +29,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 13-04-2026 14:19
 - **Prompt**: read #file:copilot-instructions.md and #file:journal-logger.agent.md
 
+### 13-04-2026 14:20
+- **Prompt**: generate the code explorer site for this project
+
