@@ -32,3 +32,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 13-04-2026 14:20
 - **Prompt**: generate the code explorer site for this project
 
+### 13-04-2026 14:20
+- **Prompt**: Analyze all Python source files in the workspace. Generate a single HTML dashboard (code explorer site) that includes: - Mermaid diagrams for module and function relationships - Pattern analysis (e.g., OOP, functional, procedural) - Performance notes if relevant - Curated links to code sections - Clear navigation for first-year students - Place the generated HTML in .github/agents/code-explorer-template.html or similar location - Log rationale and file location in JOURNAL.md per journaling rules
+
