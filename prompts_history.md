@@ -38,3 +38,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 13-04-2026 14:35
 - **Prompt**: generate the code explorer site for this project again for me please
 
+### 13-04-2026 14:46
+- **Prompt**: delete the exisitng code explorer.html and create a new one for this project the existing one is static
+
