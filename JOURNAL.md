@@ -137,3 +137,8 @@ help me implement this with stubs and todos
 - **Hook Version**: 1.02
 - **Date**: 13-04-2026 14:56
 - **Prompt**: Now i want to implement life span of each square. for this i am thinking of create a variable time and for each square default lifespan is e.g 100s after 100s that square is moved out of the screen. I think this logic makes sense what do you think ?
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 13-04-2026 14:58
+- **Prompt**: When the lifespan ends i am thinking of changing its resulotion like setting value of x and y out of screen and reduce the count of square and generate a new one
