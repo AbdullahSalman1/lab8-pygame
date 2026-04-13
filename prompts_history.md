@@ -23,3 +23,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 13-04-2026 14:13
 - **Prompt**: activate the journal logger
 
+### 13-04-2026 14:14
+- **Prompt**: Ensure that the JOURNAL.md file is present in the workspace root. If it is missing, create it. From now on, after every user interaction, append a new entry at the end of JOURNAL.md using the template from .github/agents/journal-logger.agent.md. Log even if no code changes occurred, noting 'no changes' when applicable. Maintain strict chronological order (oldest first). Do not notify the user unless explicitly asked about the journal or if logging fails.
+
