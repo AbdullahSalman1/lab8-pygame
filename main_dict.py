@@ -61,7 +61,9 @@ def flee_away(small_square: dict, big_square: dict) -> None:
 This version uses dictionaries instead of classes/dataclasses.
 """
 
-
+def is_expired(square: dict) -> bool:
+    current_time = pygame.time.get_ticks()
+    return current_time - square["created_at"] > SQUARE_LIFESPAN
 
 
 # Window and simulation constants
@@ -73,6 +75,7 @@ MIN_SIZE = 20
 MAX_SIZE = 80
 MAX_SPEED = 8  # Increase max speed for small boxes
 BACKGROUND_COLOR = (25, 25, 35)
+SQUARE_LIFESPAN = 1000
 
 
 def random_color() -> tuple[int, int, int]:
@@ -99,6 +102,8 @@ def create_square() -> dict:
     TODO: Prevent squares from spawning on top of each other.
     """
     size = random.randint(MIN_SIZE, MAX_SIZE)
+    created_at = pygame.time.get_ticks()
+
 
     x = random.uniform(0, WIDTH - size)
     y = random.uniform(0, HEIGHT - size)
@@ -115,6 +120,7 @@ def create_square() -> dict:
         "vy": vy,
         "size": size,
         "color": random_color(),
+        "created_at": created_at,
     }
 
 
@@ -180,10 +186,6 @@ def handle_events() -> bool:
 
 
 def run() -> None:
-    """Run the main animation loop.
-
-    TODO: Extract game loop pieces into separate module files.
-    """
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     pygame.display.set_caption("10 Random Moving Squares (Dictionary Version)")
@@ -195,20 +197,33 @@ def run() -> None:
     while running:
         running = handle_events()
 
-        # Flee logic
+       
+        new_squares = []
+        for square in squares:
+            if not is_expired(square):
+                new_squares.append(square)
+
+       
+        while len(new_squares) < SQUARE_COUNT:
+            new_squares.append(create_square())
+
+        squares = new_squares
+
+      
         for small in squares:
             for big in squares:
-               if small is big:
-                continue
+                if small is big:
+                    continue
 
-            # Only flee from bigger squares
-               if small["size"] < big["size"]:
+                if small["size"] < big["size"]:
                     if should_flee(small, big, flee_radius=120):
                         flee_away(small, big)
 
+    
         for square in squares:
             update_square(square)
 
+    
         screen.fill(BACKGROUND_COLOR)
         for square in squares:
             draw_square(screen, square)

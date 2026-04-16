@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Explorer — main_dict.py</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #1e1e2e;
+  --surface: #2a2a3e;
+  --surface2: #313148;
+  --text: #cdd6f4;
+  --muted: #a6adc8;
+  --accent: #89b4fa;
+  --green: #a6e3a1;
+  --yellow: #f9e2af;
+  --red: #f38ba8;
+  --mono: 'Courier New', Courier, monospace;
+  --radius: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; line-height: 1.6; }
+a { color: var(--accent); }
+a:hover { text-decoration: underline; }
+
+header { padding: 1.5rem 2rem; border-bottom: 1px solid #3a3a55; background: var(--surface); }
+header h1 { font-size: 1.4rem; color: var(--accent); letter-spacing: -0.3px; }
+header p { color: var(--muted); font-size: 0.88rem; margin-top: 0.2rem; }
+header .file-badge { display: inline-block; background: var(--surface2); border-radius: 4px; padding: 0.1rem 0.5rem; font-family: var(--mono); font-size: 0.8rem; color: var(--yellow); margin-top: 0.3rem; }
+
+/* Tab navigation */
+.tab-nav { display: flex; padding: 0 2rem; background: var(--surface); border-bottom: 1px solid #3a3a55; flex-wrap: wrap; gap: 0; }
+.tab-btn { padding: 0.75rem 1.2rem; cursor: pointer; border: none; background: none; color: var(--muted); font-size: 0.88rem; border-bottom: 2px solid transparent; transition: all 0.18s; white-space: nowrap; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* Tab panels */
+.tab-panel { display: none; padding: 2rem; max-width: 1280px; margin: 0 auto; }
+.tab-panel.active { display: block; }
+
+/* Cards */
+.card { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #3a3a55; }
+.card h3 { color: var(--accent); margin-bottom: 0.6rem; font-size: 1rem; }
+
+/* Two-column */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+/* Architecture sub-tabs */
+.arch-subnav { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.arch-btn { padding: 0.35rem 0.85rem; border-radius: 20px; border: 1px solid #444; background: none; color: var(--muted); cursor: pointer; font-size: 0.82rem; transition: all 0.18s; }
+.arch-btn:hover { border-color: var(--accent); color: var(--text); }
+.arch-btn.active { background: var(--accent); color: #1e1e2e; border-color: var(--accent); font-weight: 600; }
+.arch-panel { display: none; }
+.arch-panel.active { display: block; }
+
+.diag-container { background: var(--surface2); border-radius: var(--radius); padding: 1.5rem; min-height: 280px; overflow-x: auto; display: flex; justify-content: center; align-items: flex-start; }
+.diag-container svg { max-width: 100%; height: auto; }
+.diag-title { color: var(--accent); font-size: 1.05rem; font-weight: 600; margin-bottom: 0.75rem; }
+.diag-caption { color: var(--muted); font-size: 0.82rem; margin-top: 0.75rem; font-style: italic; border-left: 2px solid #444; padding-left: 0.6rem; }
+
+/* Patterns */
+.pattern-card { background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #3a3a55; }
+.pattern-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.pattern-icon { font-size: 1.1rem; }
+.pattern-title { font-weight: 600; color: var(--text); font-size: 0.95rem; }
+.pattern-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.75rem; }
+.pattern-layers { display: flex; flex-direction: column; gap: 0.35rem; margin-bottom: 0.6rem; }
+.layer { font-size: 0.8rem; padding: 0.28rem 0.6rem; border-radius: 4px; line-height: 1.4; }
+.layer-basics   { background: #1e3a2a; color: #a6e3a1; }
+.layer-eng      { background: #3a2e1a; color: #f9e2af; }
+.layer-arch     { background: #1a2a3e; color: #89b4fa; }
+.layer-label    { font-weight: 700; margin-right: 0.35rem; }
+.ext-link       { display: inline-block; font-size: 0.8rem; color: var(--accent); text-decoration: none; margin-top: 0.2rem; }
+.ext-link:hover { text-decoration: underline; }
+.fix-hint       { background: #1e1e2e; border-left: 3px solid var(--yellow); padding: 0.4rem 0.7rem; border-radius: 0 4px 4px 0; font-size: 0.8rem; color: var(--text); margin-top: 0.5rem; }
+code { font-family: var(--mono); font-size: 0.85em; background: #12121e; padding: 0.05em 0.3em; border-radius: 3px; color: var(--yellow); }
+
+/* Badges */
+.badge { display: inline-block; padding: 0.18rem 0.55rem; border-radius: 12px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.3px; }
+.badge-high   { background: #4a1a2a; color: var(--red); }
+.badge-medium { background: #3e2e10; color: var(--yellow); }
+.badge-low    { background: #1a3220; color: var(--green); }
+.badge-score  { background: var(--surface2); color: var(--accent); font-size: 1rem; font-weight: 700; padding: 0.3rem 0.8rem; border: 1px solid var(--accent); border-radius: var(--radius); }
+
+/* Type Hints */
+.type-banner { display: flex; align-items: center; gap: 1.2rem; padding: 1.1rem 1.5rem; background: var(--surface2); border-radius: var(--radius); margin-bottom: 1.5rem; border: 1px solid #3a3a55; }
+.score-big { font-size: 2.2rem; font-weight: 800; color: var(--accent); line-height: 1; }
+.score-verdict { color: var(--muted); font-size: 0.88rem; }
+
+/* Code Review */
+.review-layout { display: grid; grid-template-columns: 1fr 1.5fr; gap: 1.5rem; }
+@media (max-width: 800px) { .review-layout { grid-template-columns: 1fr; } }
+.review-left { background: var(--surface); border-radius: var(--radius); padding: 1.1rem; border: 1px solid #3a3a55; }
+.review-right { background: var(--surface); border-radius: var(--radius); padding: 1.5rem; border: 1px solid #3a3a55; min-height: 320px; }
+.review-item { padding: 0.7rem 0.8rem; border-radius: 6px; cursor: pointer; margin-bottom: 0.5rem; border: 1px solid transparent; transition: all 0.15s; }
+.review-item:hover { border-color: #444; background: var(--surface2); }
+.review-item.selected { border-color: var(--accent); background: var(--surface2); }
+.ri-titlerow { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+.ri-title { font-size: 0.88rem; font-weight: 600; color: var(--text); }
+.ri-note { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+pre.snippet { background: #12121e; border-radius: 5px; padding: 0.7rem; font-size: 0.76rem; overflow-x: auto; color: #cdd6f4; font-family: var(--mono); margin: 0.6rem 0; line-height: 1.5; border: 1px solid #2a2a3e; }
+.detail-head { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.9rem; }
+.detail-title { color: var(--accent); font-size: 1rem; font-weight: 700; }
+.detail-body { color: var(--muted); font-size: 0.86rem; line-height: 1.65; margin-bottom: 0.9rem; }
+.hint-box { background: var(--surface2); border-left: 3px solid var(--accent); padding: 0.6rem 0.8rem; border-radius: 0 4px 4px 0; font-size: 0.84rem; color: var(--text); }
+
+/* Performance */
+.perf-card { background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #3a3a55; }
+.perf-title { font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+.perf-desc { color: var(--muted); font-size: 0.85rem; margin-bottom: 0.5rem; }
+
+/* Next Steps */
+.ns-item { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.2rem; background: var(--surface2); border-radius: var(--radius); margin-bottom: 0.8rem; border: 1px solid #3a3a55; }
+.ns-num { font-size: 1.4rem; font-weight: 800; color: var(--accent); min-width: 2rem; line-height: 1.2; }
+.ns-text a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+.ns-text a:hover { text-decoration: underline; }
+.ns-desc { color: var(--muted); font-size: 0.83rem; margin-top: 0.2rem; }
+
+/* Fallback */
+.fallback { background: #2a1215; color: var(--red); padding: 1rem; border-radius: 6px; font-size: 0.72rem; font-family: var(--mono); overflow-x: auto; white-space: pre-wrap; }
+
+/* Section headings */
+.section-head { font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem; }
+.section-head.green { color: var(--green); }
+.section-head.yellow { color: var(--yellow); }
+.section-head.red { color: var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Code Explorer</h1>
+  <span class="file-badge">main_dict.py</span>
+  <p style="margin-top:0.4rem;">Lab 8 pygame | Dictionary-based Square Animation System | 1st Year CS</p>
+</header>
+
+<nav class="tab-nav">
+<button class="tab-btn active" onclick="switchTab('architecture', this)">Architecture</button>
+<button class="tab-btn" onclick="switchTab('patterns', this)">Patterns</button>
+<button class="tab-btn" onclick="switchTab('typehints', this)">Type Hints</button>
+<button class="tab-btn" onclick="switchTab('codereview', this)">Code Review</button>
+<button class="tab-btn" onclick="switchTab('performance', this)">Performance</button>
+<button class="tab-btn" onclick="switchTab('nextsteps', this)">Next Steps</button>
+</nav>
+
+<div id="tab-architecture" class="tab-panel active">
+  <div class="card">
+    <h3>Module & Call Architecture</h3>
+    <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1rem;">Navigate the structure of functions and their relationships. Each diagram reveals a different angle of the system design.</p>
+    
+    <div class="arch-subnav">
+      <button class="arch-btn active" onclick="switchArch('callgraph', this)">Call Graph</button>
+      <button class="arch-btn" onclick="switchArch('dependencies', this)">Dependencies</button>
+      <button class="arch-btn" onclick="switchArch('sequence', this)">Runtime Flow</button>
+      <button class="arch-btn" onclick="switchArch('data', this)">Data Relationships</button>
+    </div>
+
+    <div id="arch-callgraph" class="arch-panel active">
+      <div class="diag-title">Function Call Hierarchy</div>
+      <div id="diag-callgraph" class="diag-container"></div>
+      <div class="diag-caption">Shows which functions call other functions. Entry point <code>run()</code> orchestrates the main simulation loop.</div>
+    </div>
+
+    <div id="arch-dependencies" class="arch-panel">
+      <div class="diag-title">External & Internal Dependencies</div>
+      <div id="diag-dependencies" class="diag-container"></div>
+      <div class="diag-caption">Maps imports from pygame and standard library. Most heavy lifting comes from pygame's rendering and event system.</div>
+    </div>
+
+    <div id="arch-sequence" class="arch-panel">
+      <div class="diag-title">Main Animation Loop Sequence</div>
+      <div id="diag-sequence" class="diag-container"></div>
+      <div class="diag-caption">Illustrates the flow through one frame: event handling → flee logic → position updates → rendering.</div>
+    </div>
+
+    <div id="arch-data" class="arch-panel">
+      <div class="diag-title">Square Dictionary Data Model</div>
+      <div id="diag-data" class="diag-container"></div>
+      <div class="diag-caption">Each square is a dictionary with keys: position (x, y), velocity (vx, vy), size, and color. Position determines rendering and collision logic.</div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-patterns" class="tab-panel">
+  <div class="two-col">
+    <div>
+      <h3 style="color: var(--green); margin-bottom: 1.2rem;">✅ Good Patterns (3)</h3>
+      
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🎯</span>
+          <span class="pattern-title">Separation of Concerns</span>
+        </div>
+        <p class="pattern-desc">Update, render, and event logic are cleanly separated into distinct functions.</p>
+        <div class="pattern-layers">
+          <div class="layer"><span class="layer-label">Basics:</span> Each function has a single responsibility (e.g., <code>update_square()</code> only modifies position).</div>
+          <div class="layer"><span class="layer-label">Engineering:</span> Makes testing and debugging easier—you can verify update logic independently from rendering.</div>
+          <div class="layer"><span class="layer-label">Architecture:</span> Follows the classic MVC pattern: logic (update) + view (draw) + control (events) are decoupled.</div>
+        </div>
+        <a href="https://en.wikipedia.org/wiki/Separation_of_concerns" class="ext-link">Learn more →</a>
+      </div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">📋</span>
+          <span class="pattern-title">Type Hint Coverage</span>
+        </div>
+        <p class="pattern-desc">All function signatures include parameter and return type annotations (tuple, dict, float, bool).</p>
+        <div class="pattern-layers">
+          <div class="layer"><span class="layer-label">Basics:</span> Type hints act as inline documentation—you immediately know what a function expects.</div>
+          <div class="layer"><span class="layer-label">Engineering:</span> Type checkers (like <code>mypy</code>) can catch mismatches before runtime, preventing bugs.</div>
+          <div class="layer"><span class="layer-label">Architecture:</span> Makes code more maintainable; future you (or teammates) won't wonder "is this a list of dicts or a dict of lists?"</div>
+        </div>
+        <a href="https://docs.python.org/3/library/typing.html" class="ext-link">Python typing docs →</a>
+      </div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">⚙️</span>
+          <span class="pattern-title">Inverse Size-Speed Relationship</span>
+        </div>
+        <p class="pattern-desc">Smaller squares move faster, larger ones slower—reflecting realistic physics.</p>
+        <div class="pattern-layers">
+          <div class="layer"><span class="layer-label">Basics:</span> The scaling formula maps MIN_SIZE→MAX_SPEED and MAX_SIZE→1 pixel/frame.</div>
+          <div class="layer"><span class="layer-label">Engineering:</span> Demonstrates mathematical thinking; the formula is correct and handles edge cases (avoids div-by-zero).</div>
+          <div class="layer"><span class="layer-label">Architecture:</span> Makes the animation more engaging; size becomes a meaningful parameter that drives gameplay mechanics.</div>
+        </div>
+        <a href="https://en.wikipedia.org/wiki/Inverse_relationship" class="ext-link">Explore relationships →</a>
+      </div>
+    </div>
+
+    <div>
+      <h3 style="color: var(--red); margin-bottom: 1.2rem;">⚠️ Potential Issues (2)</h3>
+      
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">✨</span>
+          <span class="pattern-title">Magic Numbers Everywhere</span>
+        </div>
+        <p class="pattern-desc">Constants like 120 (flee_radius), 25 (SQUARE_COUNT), and color ranges (80–255) are hardcoded throughout.</p>
+        <div class="pattern-layers">
+          <div class="layer"><span class="layer-label">Basics:</span> Magic numbers make code harder to read. Why 120? Why 80–255? Future developers must hunt through code to understand intent.</div>
+          <div class="layer"><span class="layer-label">Engineering:</span> If you want to tweak the flee radius from 120 to 150, you must find and change it wherever it appears—error-prone.</div>
+          <div class="layer"><span class="layer-label">Architecture:</span> Violates the DRY (Don't Repeat Yourself) principle and the single source of truth pattern.</div>
+        </div>
+        <div class="fix-hint">🔧 Extract all magic numbers to named constants at the top: <code>FLEE_RADIUS = 120</code>, <code>COLOR_MIN = 80</code>.</div>
+      </div>
+
+      <div class="pattern-card">
+        <div class="pattern-header">
+          <span class="pattern-icon">🔗</span>
+          <span class="pattern-title">O(n²) Flee Algorithm</span>
+        </div>
+        <p class="pattern-desc">The nested loop checks every small square against every big square each frame—quadratic complexity.</p>
+        <div class="pattern-layers">
+          <div class="layer"><span class="layer-label">Basics:</span> With 25 squares, that's 625 comparisons per frame. At 100 FPS, you're doing 62,500 distance calculations/sec.</div>
+          <div class="layer"><span class="layer-label">Engineering:</span> Fine for a small demo, but scales terribly. Double the squares: 2,500x comparisons instead of 625x—you'd notice lag.</div>
+          <div class="layer"><span class="layer-label">Architecture:</span> A production game would use spatial partitioning (quadtrees, grid cells) so each check is ~O(1) instead of O(n).</div>
+        </div>
+        <div class="fix-hint">🔧 For now, add a <code># TODO</code> comment noting this. Later, learn spatial indexing to scale to thousands of objects.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-typehints" class="tab-panel">
+  <div class="card">
+    <div class="type-banner">
+      <div class="score-big">4/5</div>
+      <div>
+        <div style="font-weight: 600;">Type Hint Coverage Score</div>
+        <div class="score-verdict">Strong: parameters, returns, and container types are well-specified. Small gaps in generic dict structures.</div>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <h3 style="color: var(--green); margin-bottom: 1rem;">✅ Strengths</h3>
+        <div class="card" style="background: var(--surface2); margin-bottom: 0.8rem;">
+          <strong style="color: var(--green);">Precise Tuple Annotations</strong>
+          <p style="color: var(--muted); font-size: 0.9rem; margin-top: 0.3rem;"><code>tuple[float, float]</code> for positions is explicit and clear—no ambiguity about what a position tuple contains.</p>
+        </div>
+        <div class="card" style="background: var(--surface2);">
+          <strong style="color: var(--green);">Complete Return Types</strong>
+          <p style="color: var(--muted); font-size: 0.9rem; margin-top: 0.3rem;">Every function declares what it returns: <code>float</code>, <code>bool</code>, <code>None</code>, <code>list[dict]</code>. No guessing game.</p>
+        </div>
+      </div>
+
+      <div>
+        <h3 style="color: var(--yellow); margin-bottom: 1rem;">⚠️ Gaps</h3>
+        <div class="card" style="background: var(--surface2); margin-bottom: 0.8rem;">
+          <strong style="color: var(--yellow);">Generic dict Type</strong>
+          <p style="color: var(--muted); font-size: 0.9rem; margin-top: 0.3rem;">Functions accept <code>dict</code> but don't specify which keys they expect. Should use <code>TypedDict</code> for clarity.</p>
+        </div>
+        <div class="card" style="background: var(--surface2);">
+          <strong style="color: var(--yellow);">Missing Document Strings</strong>
+          <p style="color: var(--muted); font-size: 0.9rem; margin-top: 0.3rem;">Docstrings document intent but not all edge cases (e.g., what if <code>distance == 0</code> in <code>flee_away</code>?).</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tab-codereview" class="tab-panel">
+  <div class="review-layout">
+    <div class="review-left">
+      <h3 style="margin-bottom: 0.8rem; color: var(--accent);">Review Items</h3>
+      <div id="ri-0" class="review-item selected" onclick="selectReview(0)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Indentation Bug</span>
+          <span class="badge badge-high">high</span>
+        </div>
+        <div class="ri-note">Logic error in nested loop</div>
+      </div>
+      <div id="ri-1" class="review-item" onclick="selectReview(1)">
+        <div class="ri-titlerow">
+          <span class="ri-title">O(n²) Flee Checks</span>
+          <span class="badge badge-high">high</span>
+        </div>
+        <div class="ri-note">Performance issue</div>
+      </div>
+      <div id="ri-2" class="review-item" onclick="selectReview(2)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Magic Numbers</span>
+          <span class="badge badge-medium">medium</span>
+        </div>
+        <div class="ri-note">Maintainability concern</div>
+      </div>
+      <div id="ri-3" class="review-item" onclick="selectReview(3)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Dict Type Safety</span>
+          <span class="badge badge-medium">medium</span>
+        </div>
+        <div class="ri-note">Type hint improvement</div>
+      </div>
+      <div id="ri-4" class="review-item" onclick="selectReview(4)">
+        <div class="ri-titlerow">
+          <span class="ri-title">Missing Documentation</span>
+          <span class="badge badge-low">low</span>
+        </div>
+        <div class="ri-note">Docstring enhancement</div>
+      </div>
+    </div>
+    <div class="review-right" id="review-detail-panel"></div>
+  </div>
+</div>
+
+<div id="tab-performance" class="tab-panel">
+  <div class="card">
+    <h3>Performance Analysis</h3>
+    <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Score: 2/6 | Primary concern: quadratic flee-checking algorithm. Otherwise, frame rate is stable.</p>
+
+    <div class="two-col">
+      <div>
+        <div class="section-head green">🚀 Performance Wins</div>
+        
+        <div class="perf-card">
+          <div class="perf-title">Efficient Position Updates</div>
+          <div class="perf-desc">Each square's position is updated in O(1) time. No nested loops or expensive operations.</div>
+        </div>
+
+        <div class="perf-card">
+          <div class="perf-title">Framerate Independence</div>
+          <div class="perf-desc">Using <code>clock.tick(FPS)</code> ensures simulation runs consistently at 100 FPS regardless of rendering speed.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-head red">🐢 Performance Risks</div>
+        
+        <div class="perf-card">
+          <div class="perf-title">Quadratic Flee Algorithm</div>
+          <div class="perf-desc">Nested loop checks 25 × 25 = 625 distance calculations per frame. At 100 FPS, that's 62,500 calcs/sec—noticeable with hundreds of squares.</div>
+        </div>
+
+        <div class="perf-card">
+          <div class="perf-title">Distance Recomputation</div>
+          <div class="perf-desc"><code>calculate_distance()</code> is called twice per flee check (in <code>should_flee()</code> and again in <code>flee_away()</code>)—redundant math.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: var(--surface2); border-radius: var(--radius); padding: 1.2rem; margin-top: 1.5rem; border: 1px solid #3a3a55;">
+      <strong style="color: var(--yellow);">Verdict:</strong> <span style="color: var(--muted);">Current performance is acceptable for 25 squares at 60–100 FPS. However, the O(n²) algorithm is the scalability bottleneck. For production, implement spatial partitioning (grid or quadtree) to achieve O(n log n) or O(1) per-object behavior.</span>
+    </div>
+  </div>
+</div>
+
+<div id="tab-nextsteps" class="tab-panel">
+  <div class="card">
+    <h3>Next Steps & Learning Resources</h3>
+    <p style="color: var(--muted); margin-bottom: 1.5rem;">Complete the TODOs in the code and explore these concepts to level up your engineering skills.</p>
+
+    <div class="ns-item">
+      <div class="ns-num">1</div>
+      <div class="ns-text">
+        <a href="https://docs.python.org/3/library/typing.html#typing.TypedDict">Use TypedDict for Square Structure</a>
+        <div class="ns-desc">Define a <code>Square</code> TypedDict with keys: x, y, vx, vy, size, color. This gives IDE autocomplete and type-checker validation. Enables: <code>def update_square(sq: Square) → None</code>.</div>
+      </div>
+    </div>
+
+    <div class="ns-item">
+      <div class="ns-num">2</div>
+      <div class="ns-text">
+        <a href="https://en.wikipedia.org/wiki/Quadtree">Spatial Partitioning for Flee Logic</a>
+        <div class="ns-desc">Instead of checking all pairs, partition the screen into a grid. Only check squares in adjacent cells. Reduces flee checks from O(n²) to O(n). Research: quadtrees, KD-trees, spatial hashing.</div>
+      </div>
+    </div>
+
+    <div class="ns-item">
+      <div class="ns-num">3</div>
+      <div class="ns-text">
+        <a href="https://www.pygame.org/docs/ref/sprite.html">Pygame Sprite Class</a>
+        <div class="ns-desc">Instead of raw dicts, inherit from <code>pygame.sprite.Sprite</code>. Gives you built-in collision detection (<code>pygame.sprite.spritecollide()</code>) and group management.</div>
+      </div>
+    </div>
+
+    <div class="ns-item">
+      <div class="ns-num">4</div>
+      <div class="ns-text">
+        <a href="https://refactoring.guru/refactoring">Extract Magic Numbers to Constants</a>
+        <div class="ns-desc">Create <code>FLEE_RADIUS = 120</code>, <code>COLOR_BRIGHTNESS_MIN = 80</code>, etc. at module level. Makes the code's intent clearer and easier to tune.</div>
+      </div>
+    </div>
+
+    <div class="ns-item">
+      <div class="ns-num">5</div>
+      <div class="ns-text">
+        <a href="https://docs.python.org/3/library/unittest.html">Unit Testing Your Functions</a>
+        <div class="ns-desc">Write tests for <code>calculate_distance()</code>, <code>should_flee()</code>, and <code>flee_away()</code>. Verify edge cases: distance = 0, negative coordinates, boundary squares.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Tab switching ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Architecture sub-tabs ──
+function switchArch(name, btn) {
+  document.querySelectorAll('.arch-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.arch-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('arch-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── Code Review ──
+const reviewItems = [
+{id: 0, title: "Indentation Bug in run()", severity: "high", snippet: "for small in squares:\n    for big in squares:\n       if small is big:\n        continue\n\n       if small[\"size\"] < big[\"size\"]:", shortNote: "Inconsistent indentation breaks control flow logic", fullExplanation: "The indentation is misaligned in the nested loop structure. The lines 'if small is big: continue' and the subsequent 'if small[\"size\"]...' have incorrect leading whitespace. This causes the second if-statement to execute even when small is big, leading to incorrect flee behavior. Python is indent-sensitive; even one space out of place changes meaning.\n\nThis is a correctness bug that will cause squares to exhibit wrong flee behavior in some cases.", improvementHint: "Use a linter (pylint, flake8) or IDE autoformat to fix indentation. The structure should be: for small → for big → if skip → if flee (all properly nested with 4-space increments)."},
+
+{id: 1, title: "O(n²) Flee Algorithm", severity: "high", snippet: "for small in squares:\n    for big in squares:\n       if small is big:\n        continue\n       if small[\"size\"] < big[\"size\"]:\n            if should_flee(small, big, flee_radius=120):\n                flee_away(small, big)", shortNote: "Nested loop is inefficient; scales poorly with square count", fullExplanation: "The nested for loop iterates over all pairs of squares. With 25 squares, that's 625 iterations per frame. Each iteration calls should_flee, which computes distance. At 100 FPS, you're doing ~62,500 distance calculations per second.\n\nThis is an O(n²) algorithm. If you double the square count to 50, the work quadruples. For thousands of objects (real game), this becomes the bottleneck.\n\nThe root cause: you're checking every square against every other square, regardless of distance. Most pairs are far apart and irrelevant.", improvementHint: "Research spatial partitioning: divide the screen into a grid, store squares by cell, and only check within adjacent cells. This reduces the work to O(n) or even O(1) per object, depending on density."},
+
+{id: 2, title: "Magic Numbers Throughout Code", severity: "medium", snippet: "if should_flee(small, big, flee_radius=120):\n    ...\nsmall_square['size'] < big['size']\nrandom.randint(80, 255)  # color range", shortNote: "Hardcoded values scattered everywhere—hard to maintain", fullExplanation: "The code contains numerous magic numbers: 120 (flee radius), 25 (SQUARE_COUNT), 80–255 (color brightness), 800×600 (window), 20–80 (size range), 8 (max speed). These are embedded where they're used.\n\nProblems:\n- If you want to change flee radius from 120 to 100, where do you change it?\n- Are 80–255 and the other color range the same threshold?\n- Future readers won't understand why these specific numbers matter.\n- It violates DRY (Don't Repeat Yourself)—if a value appears twice, you must change it twice.", improvementHint: "Extract all magic numbers to named constants at module level: FLEE_RADIUS = 120, COLOR_MIN = 80, COLOR_MAX = 255. This documents intent and centralizes tuning."},
+
+{id: 3, title: "Untyped dict Arguments", severity: "medium", snippet: "def update_square(square: dict) -> None:\ndef flee_away(small_square: dict, big_square: dict) -> None:\ndef should_flee(small_square: dict, big_square: dict, flee_radius: float) -> bool:", shortNote: "dict type is too generic; should specify structure", fullExplanation: "The functions accept plain dict, but don't document which keys are expected. Readers must search the code to find out that a 'square' dict has x, y, vx, vy, size, color.\n\nIf you accidentally pass a dict with missing keys, the error happens at runtime inside the function—not at the call site where it's obvious.\n\nPython 3.8+ offers TypedDict, which lets you define a square structure with explicit keys and types.", improvementHint: "Define a TypedDict at the top: class Square(TypedDict): x: float; y: float; vx: float; vy: float; size: float; color: tuple[int, int, int]. Then use Square in all signatures."},
+
+{id: 4, title: "Incomplete Docstrings", severity: "low", snippet: "def flee_away(small_square: dict, big_square: dict) -> None:\n    \"\"\"\n    Update the small square's velocity to move away from the big square.\n    TODO: Change small_square's direction away from big_square.\n    \"\"\"", shortNote: "Docstrings exist but lack detail on edge cases", fullExplanation: "Docstrings are brief and helpful, but they don't document all cases. For example, flee_away handles distance == 0 with a return, but this isn't mentioned. Nor is it clear what 'away' means mathematically (normalized direction vector scaled by speed).\n\nClear documentation helps both you and teammates. It also serves as a specification: if the spec says 'do X in case Y', and the code doesn't, you've found a bug.", improvementHint: "Expand docstrings with Args, Returns, Raises, and Examples sections. Document edge cases and assumptions. E.g., 'If distance is zero, returns without modifying velocity (avoid division by zero).'"} 
+];
+
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function selectReview(id) {
+  document.querySelectorAll('.review-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('ri-' + id).classList.add('selected');
+  const item = reviewItems[id];
+  const sevClass = 'badge-' + item.severity;
+  const body = item.fullExplanation.replace(/\n/g, '<br>');
+  document.getElementById('review-detail-panel').innerHTML = `
+    <div>
+      <div class="detail-head">
+        <span class="detail-title">${escH(item.title)}</span>
+        <span class="badge ${escH(sevClass)}">${escH(item.severity)}</span>
+      </div>
+      <div class="detail-body">${body}</div>
+      <pre class="snippet">${escH(item.snippet)}</pre>
+      <div class="hint-box">&#128161; <strong>Improvement:</strong> ${escH(item.improvementHint)}</div>
+    </div>`;
+}
+
+// ── Mermaid ──
+mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
+
+const diagrams = {
+callgraph: String.raw`graph TD
+    n1["run()"]
+    n2["handle_events()"]
+    n3["create_squares()"]
+    n4["create_square()"]
+    n5["random_color()"]
+    n6["update_square()"]
+    n7["draw_square()"]
+    n8["should_flee()"]
+    n9["flee_away()"]
+    n10["calculate_distance()"]
+    
+    n1 --> n3
+    n1 --> n2
+    n1 --> n6
+    n1 --> n7
+    n1 --> n8
+    n1 --> n9
+    n3 --> n4
+    n4 --> n5
+    n8 --> n10
+    n9 --> n10`,
+
+dependencies: String.raw`graph LR
+    n1["pygame<br/>rendering, event, clock"]
+    n2["random<br/>colors, positions"]
+    n3["main_dict.py"]
+    
+    n3 --> n1
+    n3 --> n2`,
+
+sequence: String.raw`sequenceDiagram
+    participant p1 as main loop
+    participant p2 as update/flee
+    participant p3 as render
+    
+    p1->>p1: handle_events()
+    p1->>p2: for each square pair
+    p2->>p2: should_flee() check
+    p2->>p2: flee_away() if yes
+    p1->>p2: update_square()
+    p1->>p3: draw_square()
+    p3-->>p1: pygame.display.flip()
+    p1->>p1: clock.tick(100 FPS)`,
+
+data: String.raw`graph TD
+    n1["Square dict<br/>created in<br/>create_square()"]
+    n2["fields:<br/>x, y, vx, vy<br/>size, color"]
+    n3["Read in<br/>should_flee()"]
+    n4["Modified in<br/>update_square()"]
+    n5["Modified in<br/>flee_away()"]
+    n6["Drawn in<br/>draw_square()"]
+    
+    n1 --> n2
+    n2 --> n3
+    n2 --> n4
+    n2 --> n5
+    n2 --> n6`
+};
+
+let renderCounter = 0;
+
+async function renderDiagram(key, containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  const source = diagrams[key];
+  if (!source) { container.innerHTML = '<p style="color:var(--muted)">No diagram source found.</p>'; return; }
+  const uid = 'mmd-' + key + '-' + (++renderCounter);
+  try {
+    const { svg, bindFunctions } = await mermaid.render(uid, source);
+    container.innerHTML = svg;
+    if (typeof bindFunctions === 'function') bindFunctions(container);
+  } catch (err) {
+    container.innerHTML = '<pre class="fallback">Render failed: ' + err.message + '\n\nSource:\n' + source + '</pre>';
+  }
+}
+
+async function renderAll() {
+  for (const [key] of Object.entries(diagrams)) {
+    await renderDiagram(key, 'diag-' + key);
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  selectReview(0);
+  renderAll();
+});
+</script>
+</body>
+</html>
