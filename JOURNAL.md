@@ -142,3 +142,8 @@ help me implement this with stubs and todos
 - **Hook Version**: 1.02
 - **Date**: 13-04-2026 14:58
 - **Prompt**: When the lifespan ends i am thinking of changing its resulotion like setting value of x and y out of screen and reduce the count of square and generate a new one
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 16-04-2026 14:45
+- **Prompt**: adding a rebirth loop check before flee in run function will work ?
