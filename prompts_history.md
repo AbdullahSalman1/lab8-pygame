@@ -74,3 +74,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 23-04-2026 15:07
 - **Prompt**: I implememted chasing func with flee functionality should i create a separate function for chasing that will find whether to chase or not
 
+### 23-04-2026 15:11
+- **Prompt**: i tried to implement the one generic function can you go through the code again
+
