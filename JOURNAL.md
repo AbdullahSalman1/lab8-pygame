@@ -177,3 +177,8 @@ help me implement this with stubs and todos
 - **Hook Version**: 1.02
 - **Date**: 23-04-2026 15:05
 - **Prompt**: should i declare speed for bigger squares separately for chasing ?
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 23-04-2026 15:07
+- **Prompt**: I implememted chasing func with flee functionality should i create a separate function for chasing that will find whether to chase or not
