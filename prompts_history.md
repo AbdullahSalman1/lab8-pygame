@@ -62,3 +62,6 @@ Automatically captured prompt log. Entries are appended in chronological order (
 ### 23-04-2026 14:54
 - **Prompt**: Now i have to implement chasing functionality. Fleeing functionality is already implemented in the code. So i just need to move the bigger square in the direction of smaller one. So for this do i just need to change the direction of bigger square or i need to fix its speed as well ?
 
+### 23-04-2026 14:57
+- **Prompt**: for fleeing or chasing we find the distance from center to center. If i find the distance from top left to top left will it work ?
+
