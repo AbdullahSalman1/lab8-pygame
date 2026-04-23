@@ -167,3 +167,8 @@ help me implement this with stubs and todos
 - **Hook Version**: 1.02
 - **Date**: 23-04-2026 14:57
 - **Prompt**: for fleeing or chasing we find the distance from center to center. If i find the distance from top left to top left will it work ?
+
+### **New Interaction**
+- **Hook Version**: 1.02
+- **Date**: 23-04-2026 15:03
+- **Prompt**: I tried to implement the chase functionality can you just go through the code and let me know if there's anything that needs to be changed
