@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Project Mastery — lab8-pygame Study Tool</title>
+    <style>
+        :root {
+            --bg: #0b1020;
+            --surface: #121a30;
+            --text: #e8edf9;
+            --accent: #62d0ff;
+            --muted: #9fb1d4;
+            --radius: 16px;
+            --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+            --ok: #59d38a;
+            --warn: #ffd166;
+            --bad: #ff6b6b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Avenir Next", "Segoe UI", "Trebuchet MS", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 10%, rgba(98, 208, 255, 0.18), transparent 32%),
+                radial-gradient(circle at 85% 0%, rgba(112, 86, 255, 0.2), transparent 28%),
+                linear-gradient(145deg, #070b17, #101a33 45%, #0b1020);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        main {
+            width: min(1120px, 92vw);
+            margin: 1.2rem auto 2rem;
+            display: grid;
+            gap: 1rem;
+        }
+
+        .section {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1rem;
+        }
+
+        h1, h2, h3 {
+            margin: 0.2rem 0 0.7rem;
+        }
+
+        .subtle {
+            color: var(--muted);
+            margin: 0;
+        }
+
+        .pill {
+            display: inline-flex;
+            gap: 0.35rem;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            padding: 0.2rem 0.65rem;
+            color: var(--muted);
+            font-size: 0.85rem;
+            margin-right: 0.45rem;
+            margin-top: 0.5rem;
+        }
+
+        .modes {
+            display: flex;
+            gap: 0.65rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 0.6rem 0.9rem;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button:hover {
+            border-color: var(--accent);
+        }
+
+        button.active {
+            background: rgba(98, 208, 255, 0.18);
+            border-color: var(--accent);
+        }
+
+        #flashcard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.85rem;
+        }
+
+        .flashcard {
+            perspective: 1000px;
+            min-height: 250px;
+            outline: none;
+        }
+
+        .flashcard-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 250px;
+            transform-style: preserve-3d;
+            transition: transform 0.45s ease;
+        }
+
+        .flashcard.is-flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front,
+        .flashcard-back {
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(15, 22, 45, 0.92);
+            padding: 0.8rem;
+            backface-visibility: hidden;
+            overflow-wrap: anywhere;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            background: rgba(18, 28, 55, 0.95);
+        }
+
+        .anchor {
+            color: var(--muted);
+            font-size: 0.8rem;
+            border-top: 1px dashed rgba(255, 255, 255, 0.15);
+            padding-top: 0.5rem;
+            margin-top: auto;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .question-card {
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 12px;
+            padding: 0.9rem;
+            background: rgba(10, 16, 35, 0.8);
+        }
+
+        .q-meta {
+            color: var(--muted);
+            font-size: 0.84rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .option {
+            display: block;
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            border-radius: 8px;
+            padding: 0.55rem;
+            margin: 0.35rem 0;
+            cursor: pointer;
+        }
+
+        .quiz-nav {
+            margin-top: 0.8rem;
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        #quiz-results,
+        #results-overview {
+            margin-top: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 10px;
+            padding: 0.8rem;
+            background: rgba(12, 20, 40, 0.82);
+        }
+
+        .result-ok { color: var(--ok); }
+        .result-bad { color: var(--bad); }
+
+        .explain {
+            margin-top: 0.55rem;
+            font-size: 0.9rem;
+            color: var(--muted);
+            border-left: 3px solid rgba(255, 255, 255, 0.18);
+            padding-left: 0.55rem;
+        }
+
+        @media (max-width: 900px) {
+            #flashcard-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 620px) {
+            #flashcard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .flashcard,
+            .flashcard-inner {
+                min-height: 230px;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- STUDY_TOOL_TEMPLATE_VERSION: 2.0 -->
+<main id="app">
+    <header class="section">
+        <h1>Project Mastery: lab8-pygame</h1>
+        <p class="subtle">Resolved project root: <code>d:\EPITA\II Sem\LLMS\lab8-pygame</code> · Difficulty: <strong>Medium</strong> · Questions: <strong>15</strong></p>
+        <span class="pill">Source file order: main_dict.py</span>
+        <span class="pill">Template: 2.0</span>
+    </header>
+
+    <section id="study-summary" class="section"></section>
+    <section id="mode-switcher" class="section"></section>
+
+    <section id="flashcards" class="section">
+        <h2>Flashcards</h2>
+        <p class="subtle">Click or press <kbd>Enter</kbd>/<kbd>Space</kbd> to flip each card.</p>
+        <div id="flashcard-grid"></div>
+    </section>
+
+    <section id="quiz" class="section">
+        <h2>Quiz</h2>
+        <div id="quiz-content"></div>
+        <div class="quiz-nav"></div>
+        <div id="quiz-results"></div>
+    </section>
+
+    <section id="results" class="section">
+        <h2>Results</h2>
+        <div id="results-overview">Submit the quiz to see your score, corrections, and explanations.</div>
+    </section>
+</main>
+
+<script>
+'use strict';
+
+const projectSummary = {
+    root: 'd:\\EPITA\\II Sem\\LLMS\\lab8-pygame',
+    filesAnalyzed: ['main_dict.py'],
+    themes: [
+        'Dictionary-based entity state with keys like x, y, vx, vy, size, color, created_at, lifespan',
+        'Frame loop orchestration in run() with event handling, lifecycle filtering, behavior steering, movement update, and rendering',
+        'Behavior logic includes flee_away() for smaller squares and chase_towards() for larger squares',
+        'Lifespan is implemented via is_expired() and respawn loop to keep SQUARE_COUNT stable',
+        'Pairwise interactions use nested loops, giving quadratic O(n²) comparisons per frame'
+    ]
+};
+
+const flashcards = [
+    {
+        title: 'Entity State Shape',
+        front: 'What data structure represents each square, and why is that important when many functions mutate it?',
+        back: 'Each square is a plain dictionary created in create_square(). Because it is mutable and shared, flee/chase/update functions can all modify velocity/position in place.',
+        trace: { file: 'main_dict.py', symbol: 'create_square', anchor: '"x", "y", "vx", "vy", "size", "color", "created_at", "lifespan"' }
+    },
+    {
+        title: 'Distance Core',
+        front: 'Which function centralizes Euclidean distance and what formula does it implement?',
+        back: 'calculate_distance(pos1, pos2) computes sqrt(dx² + dy²). It is used by flee_away() and chase_towards() after center-point extraction.',
+        trace: { file: 'main_dict.py', symbol: 'calculate_distance', anchor: 'return (dx**2 + dy**2) ** 0.5' }
+    },
+    {
+        title: 'Lifespan Filter',
+        front: 'How does the program remove old squares while preserving total count?',
+        back: 'run() builds new_squares with only non-expired items using is_expired(), then appends create_square() until len(new_squares) == SQUARE_COUNT.',
+        trace: { file: 'main_dict.py', symbol: 'run / is_expired', anchor: 'while len(new_squares) < SQUARE_COUNT' }
+    },
+    {
+        title: 'Flee Trigger',
+        front: 'When does a small square flee?',
+        back: 'In nested loops, if small["size"] < big["size"] and is_close_enough(small, big, 120) is true, flee_away(small, big) overrides small velocity.',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'if is_close_enough(small, big, 120): flee_away(small, big)' }
+    },
+    {
+        title: 'Chase Trigger',
+        front: 'When does a bigger square chase?',
+        back: 'Inside the same size comparison branch, elif is_close_enough(big, small, 200) triggers chase_towards(big, small). The elif prevents immediate overwrite after flee branch.',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'elif is_close_enough(big, small, 200): chase_towards(big, small)' }
+    },
+    {
+        title: 'Boundary Bounce',
+        front: 'How is wall collision handled?',
+        back: 'update_square() clamps x/y to edges and multiplies vx or vy by -1 on collision, producing bounce behavior.',
+        trace: { file: 'main_dict.py', symbol: 'update_square', anchor: 'square["vx"] *= -1 / square["vy"] *= -1' }
+    },
+    {
+        title: 'Frame Pacing',
+        front: 'What enforces simulation pacing and where is FPS displayed?',
+        back: 'clock.tick(FPS) caps loop speed; FPS text comes from clock.get_fps() and is rendered with pygame.font.SysFont + screen.blit.',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'clock.tick(FPS), fps = clock.get_fps()' }
+    },
+    {
+        title: 'Quadratic Cost',
+        front: 'Why does behavior checking scale poorly?',
+        back: 'Two nested loops iterate all square pairs (except identity), which is O(n²) distance checks per frame.',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'for small in squares: for big in squares:' }
+    }
+];
+
+const quizData = [
+    {
+        id: 'q-0',
+        category: 'Behavior tracing',
+        question: 'In run(), what happens immediately after expired squares are removed from new_squares?',
+        options: [
+            'All squares are redrawn before movement',
+            'New squares are created until count returns to SQUARE_COUNT',
+            'Velocity of all squares is set to zero',
+            'The game exits if one square expired'
+        ],
+        correctIndex: 1,
+        explanation: 'The loop while len(new_squares) < SQUARE_COUNT appends create_square(), restoring stable population.',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'while len(new_squares) < SQUARE_COUNT' }
+    },
+    {
+        id: 'q-1',
+        category: 'Behavior tracing',
+        question: 'If distance == 0 inside flee_away(), what is the direct outcome?',
+        options: [
+            'The square teleports to (0,0)',
+            'Velocity doubles to break overlap',
+            'Function returns without changing vx/vy',
+            'An exception is raised'
+        ],
+        correctIndex: 2,
+        explanation: 'flee_away() has an early return when distance is zero to avoid dividing by zero in normalization.',
+        trace: { file: 'main_dict.py', symbol: 'flee_away', anchor: 'if distance == 0: return' }
+    },
+    {
+        id: 'q-2',
+        category: 'Behavior tracing',
+        question: 'Which expression in is_close_enough() shows that center points are compared, not top-left corners?',
+        options: [
+            'x1 = square1["x"] + square1["size"] / 2',
+            'dx = x1 - x2',
+            'distance = (dx * dx + dy * dy) ** 0.5',
+            'return distance <= radius'
+        ],
+        correctIndex: 0,
+        explanation: 'Adding size/2 shifts from top-left to center point, which gives more stable distance logic for different square sizes.',
+        trace: { file: 'main_dict.py', symbol: 'is_close_enough', anchor: 'square1["x"] + square1["size"] / 2' }
+    },
+    {
+        id: 'q-3',
+        category: 'Behavior tracing',
+        question: 'In chase_towards(), why does bigger_square move toward smaller_square?',
+        options: [
+            'dx, dy are computed as smaller minus bigger and normalized',
+            'Random velocity is reassigned every frame',
+            'Bounce logic flips velocity toward center',
+            'is_expired() pushes vectors inward'
+        ],
+        correctIndex: 0,
+        explanation: 'Direction vector is (smaller - bigger), normalized, then scaled by speed, so velocity points at the smaller square.',
+        trace: { file: 'main_dict.py', symbol: 'chase_towards', anchor: 'dx = smaller_pos[0] - bigger_pos[0]' }
+    },
+    {
+        id: 'q-4',
+        category: 'Debugging/fault localization',
+        question: 'A square gets stuck at the left wall. Which code branch should you inspect first?',
+        options: [
+            'Font rendering block',
+            'Horizontal bounce branch in update_square()',
+            'Random color generation',
+            'Main guard (__name__ check)'
+        ],
+        correctIndex: 1,
+        explanation: 'The left-edge clamp and velocity inversion are in update_square(): if square["x"] < 0 then x=0 and vx *= -1.',
+        trace: { file: 'main_dict.py', symbol: 'update_square', anchor: 'if square["x"] < 0' }
+    },
+    {
+        id: 'q-5',
+        category: 'Debugging/fault localization',
+        question: 'If quitting the window does nothing, which function is the primary debug target?',
+        options: [
+            'random_color()',
+            'calculate_distance()',
+            'handle_events()',
+            'draw_square()'
+        ],
+        correctIndex: 2,
+        explanation: 'Window close is detected via pygame.QUIT inside handle_events(), which controls the running flag.',
+        trace: { file: 'main_dict.py', symbol: 'handle_events', anchor: 'if event.type == pygame.QUIT: return False' }
+    },
+    {
+        id: 'q-6',
+        category: 'Debugging/fault localization',
+        question: 'A student reports chase velocity overwriting flee in the same comparison branch. Which control-flow detail addresses that?',
+        options: [
+            'The elif between flee and chase checks',
+            'The random lifespan range',
+            'The color tuple type',
+            'The FPS counter'
+        ],
+        correctIndex: 0,
+        explanation: 'The chase condition is written as elif after flee condition, preventing both from firing in the same branch evaluation.',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'elif is_close_enough(big, small, 200)' }
+    },
+    {
+        id: 'q-7',
+        category: 'Design tradeoff',
+        question: 'What is a direct tradeoff of representing squares as dict instead of a class or TypedDict?',
+        options: [
+            'No ability to mutate values',
+            'Higher key flexibility but weaker static structure checks',
+            'Impossible to draw with pygame.Rect',
+            'Cannot store tuples'
+        ],
+        correctIndex: 1,
+        explanation: 'dict is flexible and quick for prototyping, but key contracts are implicit; static analyzers cannot enforce expected keys as strongly.',
+        trace: { file: 'main_dict.py', symbol: 'create_square + signatures', anchor: 'def create_square() -> dict' }
+    },
+    {
+        id: 'q-8',
+        category: 'Design tradeoff',
+        question: 'Why might the code boost chase speed using speed = base_speed * 1.1?',
+        options: [
+            'To keep larger squares always slower than smaller ones',
+            'To slightly improve catch-up pressure during pursuit',
+            'To reduce FPS load',
+            'To disable bouncing at walls'
+        ],
+        correctIndex: 1,
+        explanation: 'Without a small boost, larger chasers may fail to sustain pursuit when targets drift out of radius quickly.',
+        trace: { file: 'main_dict.py', symbol: 'chase_towards', anchor: 'speed = base_speed * 1.1' }
+    },
+    {
+        id: 'q-9',
+        category: 'Design tradeoff',
+        question: 'What is one benefit of computing speed from size with the same formula in multiple behaviors?',
+        options: [
+            'It guarantees O(1) total frame complexity',
+            'It keeps movement semantics consistent across random/flee/chase updates',
+            'It removes need for boundary checks',
+            'It avoids using random'
+        ],
+        correctIndex: 1,
+        explanation: 'Using related scaling logic keeps gameplay feel coherent: smaller entities remain relatively faster across states.',
+        trace: { file: 'main_dict.py', symbol: 'create_square/flee_away/chase_towards', anchor: '((MAX_SIZE - size) / (MAX_SIZE - MIN_SIZE)) * (MAX_SPEED - 1) + 1' }
+    },
+    {
+        id: 'q-10',
+        category: 'Edge case/robustness',
+        question: 'Why does both flee_away() and chase_towards() guard against distance == 0?',
+        options: [
+            'To avoid division by zero during normalization',
+            'To reset lifespans',
+            'To force square deletion',
+            'To guarantee center alignment'
+        ],
+        correctIndex: 0,
+        explanation: 'Both normalize by distance; zero would cause undefined division. Early return preserves runtime stability.',
+        trace: { file: 'main_dict.py', symbol: 'flee_away/chase_towards', anchor: 'if distance == 0: return' }
+    },
+    {
+        id: 'q-11',
+        category: 'Edge case/robustness',
+        question: 'What robustness behavior keeps the simulation from shrinking to zero squares over time?',
+        options: [
+            'SQUARE_LIFESPAN constant',
+            'Respawn loop after filtering expired squares',
+            'clock.tick(FPS)',
+            'display caption update'
+        ],
+        correctIndex: 1,
+        explanation: 'Expired entities are removed, but create_square() replenishes until count matches SQUARE_COUNT each frame.',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'while len(new_squares) < SQUARE_COUNT' }
+    },
+    {
+        id: 'q-12',
+        category: 'Edge case/robustness',
+        question: 'If a square crosses right boundary, which update keeps it inside visible area?',
+        options: [
+            'square["x"] = WIDTH - square["size"] and vx *= -1',
+            'square["x"] = WIDTH and vy *= -1',
+            'square["x"] = 0 and vx = 0',
+            'No correction is applied'
+        ],
+        correctIndex: 0,
+        explanation: 'The right-edge branch clamps x so the entire square remains onscreen and inverts horizontal velocity.',
+        trace: { file: 'main_dict.py', symbol: 'update_square', anchor: 'elif square["x"] + square["size"] > WIDTH' }
+    },
+    {
+        id: 'q-13',
+        category: 'Complexity (Big-O)',
+        question: 'What is the time complexity of pairwise behavior checks in run() for n squares?',
+        options: [
+            'O(1)',
+            'O(log n)',
+            'O(n)',
+            'O(n²)'
+        ],
+        correctIndex: 3,
+        explanation: 'Nested loops over the same list perform roughly n × n comparisons per frame (excluding identity continue).',
+        trace: { file: 'main_dict.py', symbol: 'run', anchor: 'for small in squares: for big in squares:' }
+    },
+    {
+        id: 'q-14',
+        category: 'Complexity (Big-O)',
+        question: 'Which statement best describes the complexity impact of the lifespan filter + respawn block?',
+        options: [
+            'Worst-case O(n) per frame for filtering and refill checks, separate from O(n²) behavior checks',
+            'Always O(n²) because of random.randint',
+            'Always O(1) because SQUARE_COUNT is constant in this file',
+            'O(log n) due to pygame.time.get_ticks()'
+        ],
+        correctIndex: 0,
+        explanation: 'The filter loop is linear in current square count; respawn loop can add up to n items in worst case, so this part is linear.',
+        trace: { file: 'main_dict.py', symbol: 'run/is_expired', anchor: 'for square in squares + while len(new_squares) < SQUARE_COUNT' }
+    }
+];
+
+const state = {
+    mode: 'flashcards',
+    currentQuestion: 0,
+    submitted: false
+};
+
+function renderStudySummary() {
+    const summary = document.getElementById('study-summary');
+    summary.innerHTML = `
+        <h2>Study Summary</h2>
+        <p class="subtle">Technical themes found directly in <code>main_dict.py</code>:</p>
+        <ul>
+            ${projectSummary.themes.map((theme) => `<li>${theme}</li>`).join('')}
+        </ul>
+        <p class="subtle">Note: Lifespan is currently implemented by filtering expired squares and respawning to keep count stable.</p>
+    `;
+}
+
+function renderModeSwitcher() {
+    const mode = document.getElementById('mode-switcher');
+    mode.innerHTML = `
+        <h2>Mode Switcher</h2>
+        <div class="modes" role="tablist" aria-label="Study modes">
+            <button id="mode-flashcards" type="button" class="active" aria-controls="flashcards">Flashcards</button>
+            <button id="mode-quiz" type="button" aria-controls="quiz">Quiz</button>
+        </div>
+    `;
+
+    document.getElementById('mode-flashcards').addEventListener('click', () => setMode('flashcards'));
+    document.getElementById('mode-quiz').addEventListener('click', () => setMode('quiz'));
+}
+
+function setMode(modeName) {
+    state.mode = modeName;
+    document.getElementById('flashcards').classList.toggle('hidden', modeName !== 'flashcards');
+    document.getElementById('quiz').classList.toggle('hidden', modeName !== 'quiz');
+    document.getElementById('mode-flashcards').classList.toggle('active', modeName === 'flashcards');
+    document.getElementById('mode-quiz').classList.toggle('active', modeName === 'quiz');
+}
+
+function renderFlashcards() {
+    const grid = document.getElementById('flashcard-grid');
+    grid.innerHTML = flashcards.map((card, idx) => `
+        <article class="flashcard" tabindex="0" role="button" aria-pressed="false" data-card-index="${idx}">
+            <div class="flashcard-inner">
+                <div class="flashcard-front">
+                    <h3>${idx + 1}. ${card.title}</h3>
+                    <p>${card.front}</p>
+                    <p class="anchor">Evidence → ${card.trace.file} · ${card.trace.symbol} · <code>${card.trace.anchor}</code></p>
+                </div>
+                <div class="flashcard-back">
+                    <h3>Answer</h3>
+                    <p>${card.back}</p>
+                    <p class="anchor">Anchor: <code>${card.trace.anchor}</code></p>
+                </div>
+            </div>
+        </article>
+    `).join('');
+
+    grid.addEventListener('click', (event) => {
+        const card = event.target.closest('.flashcard');
+        if (!card) {
+            return;
+        }
+        toggleFlashcard(card);
+    });
+
+    grid.addEventListener('keydown', (event) => {
+        if (event.key !== 'Enter' && event.key !== ' ') {
+            return;
+        }
+        const card = event.target.closest('.flashcard');
+        if (!card) {
+            return;
+        }
+        event.preventDefault();
+        toggleFlashcard(card);
+    });
+}
+
+function toggleFlashcard(cardEl) {
+    cardEl.classList.toggle('is-flipped');
+    const isFlipped = cardEl.classList.contains('is-flipped');
+    cardEl.setAttribute('aria-pressed', isFlipped ? 'true' : 'false');
+}
+
+// Phase 1: setup only
+function initializeQuizDOM() {
+    const quizContent = document.getElementById('quiz-content');
+    quizContent.innerHTML = quizData.map((q, i) => `
+        <article id="q-${i}" class="question-card ${i === 0 ? '' : 'hidden'}" data-question-index="${i}">
+            <p class="q-meta">${q.category} · ${q.trace.file} · ${q.trace.symbol}</p>
+            <h3>Q${i + 1}. ${q.question}</h3>
+            <p class="subtle">Evidence anchor: <code>${q.trace.anchor}</code></p>
+            <div>
+                ${q.options.map((opt, optIndex) => `
+                    <label class="option">
+                        <input type="radio" name="answer-${i}" value="${optIndex}" /> ${opt}
+                    </label>
+                `).join('')}
+            </div>
+        </article>
+    `).join('');
+
+    document.getElementById('quiz-results').textContent = 'Answer each question, then submit.';
+}
+
+// Phase 2: state updates only
+function showQuestion(index) {
+    quizData.forEach((_, i) => {
+        const node = document.getElementById(`q-${i}`);
+        node.classList.toggle('hidden', i !== index);
+    });
+}
+
+function updateQuizNav() {
+    const nav = document.querySelector('.quiz-nav');
+    const prevDisabled = state.currentQuestion === 0 ? 'disabled' : '';
+    const nextDisabled = state.currentQuestion === quizData.length - 1 ? 'disabled' : '';
+    const onLast = state.currentQuestion === quizData.length - 1;
+    nav.innerHTML = `
+        <button type="button" id="prev-btn" ${prevDisabled}>Previous</button>
+        <button type="button" id="next-btn" ${nextDisabled}>Next</button>
+        <button type="button" id="submit-btn" class="${onLast ? '' : 'hidden'}">Submit Quiz</button>
+        <span class="subtle">Question ${state.currentQuestion + 1} / ${quizData.length}</span>
+    `;
+
+    document.getElementById('prev-btn').addEventListener('click', prevQuestion);
+    document.getElementById('next-btn').addEventListener('click', nextQuestion);
+    const submitButton = document.getElementById('submit-btn');
+    if (submitButton) {
+        submitButton.addEventListener('click', submitQuiz);
+    }
+}
+
+function nextQuestion() {
+    if (state.submitted || state.currentQuestion >= quizData.length - 1) {
+        return;
+    }
+    state.currentQuestion += 1;
+    showQuestion(state.currentQuestion);
+    updateQuizNav();
+}
+
+function prevQuestion() {
+    if (state.submitted || state.currentQuestion <= 0) {
+        return;
+    }
+    state.currentQuestion -= 1;
+    showQuestion(state.currentQuestion);
+    updateQuizNav();
+}
+
+function submitQuiz() {
+    if (state.submitted) {
+        return;
+    }
+    state.submitted = true;
+
+    let score = 0;
+    const details = quizData.map((q, i) => {
+        const selected = document.querySelector(`input[name="answer-${i}"]:checked`);
+        const selectedIndex = selected ? Number(selected.value) : -1;
+        const isCorrect = selectedIndex === q.correctIndex;
+        if (isCorrect) {
+            score += 1;
+        }
+        return { q, i, selectedIndex, isCorrect };
+    });
+
+    const resultsHtml = `
+        <h3>Score: ${score} / ${quizData.length}</h3>
+        <p class="subtle">Each question is worth 1 point. Correct answers and explanations are listed below.</p>
+        ${details.map(({ q, i, selectedIndex, isCorrect }) => `
+            <div>
+                <p><strong>Q${i + 1}</strong> — <span class="${isCorrect ? 'result-ok' : 'result-bad'}">${isCorrect ? 'Correct' : 'Incorrect'}</span></p>
+                <p class="subtle">Your answer: ${selectedIndex >= 0 ? q.options[selectedIndex] : 'No answer selected'}</p>
+                <p class="subtle">Correct answer: ${q.options[q.correctIndex]}</p>
+                <p class="explain">${q.explanation}<br/>Trace: ${q.trace.file} · ${q.trace.symbol} · <code>${q.trace.anchor}</code></p>
+            </div>
+        `).join('')}
+    `;
+
+    document.getElementById('quiz-results').innerHTML = resultsHtml;
+    document.getElementById('results-overview').innerHTML = resultsHtml;
+
+    document.getElementById('quiz-content').classList.add('hidden');
+    document.querySelector('.quiz-nav').classList.add('hidden');
+}
+
+function validateRuntimeStructure() {
+    const missing = [];
+
+    if (!document.getElementById('quiz-content')) {
+        missing.push('#quiz-content');
+    }
+    if (!document.querySelector('.quiz-nav')) {
+        missing.push('.quiz-nav');
+    }
+    if (!document.getElementById('quiz-results')) {
+        missing.push('#quiz-results');
+    }
+
+    for (let i = 0; i < quizData.length; i += 1) {
+        if (!document.getElementById(`q-${i}`)) {
+            missing.push(`#q-${i}`);
+        }
+    }
+
+    const cards = document.querySelectorAll('.flashcard');
+    if (cards.length === 0) {
+        missing.push('.flashcard (none found)');
+    }
+    cards.forEach((card, idx) => {
+        if (!card.querySelector('.flashcard-front')) {
+            missing.push(`.flashcard-front missing in flashcard[${idx}]`);
+        }
+        if (!card.querySelector('.flashcard-back')) {
+            missing.push(`.flashcard-back missing in flashcard[${idx}]`);
+        }
+    });
+
+    if (missing.length > 0) {
+        console.error('Study tool DOM validation failed. Missing elements:', missing);
+    }
+}
+
+function initialize() {
+    renderStudySummary();
+    renderModeSwitcher();
+    renderFlashcards();
+    initializeQuizDOM();
+    showQuestion(0);
+    updateQuizNav();
+    validateRuntimeStructure();
+    setMode('flashcards');
+}
+
+window.addEventListener('DOMContentLoaded', initialize);
+</script>
+</body>
+</html>

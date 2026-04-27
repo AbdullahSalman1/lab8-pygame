@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>lab8-pygame Architecture</title>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, theme: "default", securityLevel: "loose" });
+  </script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --accent: #2563eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.5;
+    }
+    .container {
+      width: min(1100px, 92vw);
+      margin: 2rem auto 3rem;
+    }
+    h1, h2 { margin: 0 0 0.75rem; }
+    p { color: var(--muted); margin-top: 0; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1rem 1.25rem;
+      margin-bottom: 1rem;
+      overflow-x: auto;
+    }
+    code {
+      background: #eef2ff;
+      border: 1px solid #dbeafe;
+      border-radius: 6px;
+      padding: 0.1rem 0.35rem;
+    }
+    .meta {
+      border-left: 4px solid var(--accent);
+      padding-left: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .list {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Architecture Documentation</h1>
+    <div class="meta">
+      <p>
+        Project: <code>lab8-pygame</code> · Source analyzed: <code>main_dict.py</code>
+      </p>
+    </div>
+
+    <section>
+      <h2>Module dependency graph</h2>
+      <div class="mermaid">
+flowchart LR
+    App["Python Runtime"] --> Entry["__main__ Guard"]
+    Entry --> Mod["main_dict.py"]
+    Mod --> Pygame["pygame"]
+    Mod --> Random["random"]
+      </div>
+    </section>
+
+    <section>
+      <h2>High-level runtime flow</h2>
+      <div class="mermaid">
+flowchart TD
+    Start["Start Program"] --> Init["run(): Initialize Pygame, Screen, Clock, Font"]
+    Init --> Create["create_squares(SQUARE_COUNT)"]
+    Create --> Loop{"Main Loop Running?"}
+
+    Loop -->|"yes"| Events["handle_events()"]
+    Events --> Alive["Filter Non-Expired Squares via is_expired()"]
+    Alive --> Respawn["Respawn via create_square() until SQUARE_COUNT"]
+    Respawn --> Behavior["Pairwise Behavior Check"]
+    Behavior --> Branch{"size comparison + radius checks"}
+    Branch -->|"small near big"| Flee["flee_away(small, big)"]
+    Branch -->|"big near small and not fleeing"| Chase["chase_towards(big, small)"]
+    Branch -->|"no condition met"| Skip["No velocity override"]
+
+    Flee --> Update["update_square() for each square"]
+    Chase --> Update
+    Skip --> Update
+
+    Update --> Draw["draw_square() for each square"]
+    Draw --> Hud["Render FPS and Square Count"]
+    Hud --> Present["display.flip() + clock.tick(FPS)"]
+    Present --> Loop
+
+    Loop -->|"no"| End["pygame.quit()"]
+      </div>
+    </section>
+
+    <section>
+      <h2>Function-level call graph</h2>
+      <div class="mermaid">
+flowchart TD
+    Main["__main__"] --> Run["run()"]
+
+    Run --> HandleEvents["handle_events()"]
+    Run --> CreateSquares["create_squares(count)"]
+    Run --> IsExpired["is_expired(square)"]
+    Run --> CreateSquare["create_square()"]
+    Run --> IsCloseEnough["is_close_enough(square1, square2, radius)"]
+    Run --> FleeAway["flee_away(small_square, big_square)"]
+    Run --> ChaseTowards["chase_towards(bigger_square, smaller_square)"]
+    Run --> UpdateSquare["update_square(square)"]
+    Run --> DrawSquare["draw_square(screen, square)"]
+
+    CreateSquares --> CreateSquare
+    CreateSquare --> RandomColor["random_color()"]
+    FleeAway --> CalculateDistance["calculate_distance(pos1, pos2)"]
+    ChaseTowards --> CalculateDistance
+      </div>
+    </section>
+
+    <section>
+      <h2>Primary execution sequence</h2>
+      <div class="mermaid">
+sequenceDiagram
+    participant RT as "Python Runtime"
+    participant APP as "run()"
+    participant EVT as "handle_events()"
+    participant LIFE as "is_expired()"
+    participant AI as "is_close_enough() / flee_away() / chase_towards()"
+    participant PHYS as "update_square()"
+    participant REND as "draw_square() + HUD + display"
+
+    RT->>APP: "Call run() from __main__"
+    APP->>APP: "Initialize pygame/screen/clock/font"
+    APP->>APP: "create_squares(SQUARE_COUNT)"
+
+    loop "Each frame while running"
+        APP->>EVT: "Poll events"
+        EVT-->>APP: "running flag"
+
+        APP->>LIFE: "Check each square lifespan"
+        alt "square expired"
+            LIFE-->>APP: "exclude square"
+        else "square alive"
+            LIFE-->>APP: "keep square"
+        end
+
+        APP->>APP: "Respawn new squares until count is stable"
+
+        loop "For each (small, big) pair"
+            APP->>AI: "size/radius checks"
+            alt "small is close to bigger square"
+                AI->>AI: "flee_away(): set small vx/vy"
+            else "bigger is close to smaller square"
+                AI->>AI: "chase_towards(): set big vx/vy"
+            else "neither condition"
+                AI-->>APP: "no override"
+            end
+        end
+
+        APP->>PHYS: "update_square() for all squares"
+        APP->>REND: "draw squares, draw FPS/count, flip, tick"
+    end
+
+    APP-->>RT: "Quit pygame and return"
+      </div>
+    </section>
+
+    <section>
+      <h2>Data model notes</h2>
+      <ul class="list">
+        <li>Square dictionaries include: <code>x</code>, <code>y</code>, <code>vx</code>, <code>vy</code>, <code>size</code>, <code>color</code>, <code>created_at</code>, <code>lifespan</code>.</li>
+        <li>These fields are created in <code>create_square()</code> and then read/mutated across lifecycle, behavior, physics, and rendering steps.</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>
