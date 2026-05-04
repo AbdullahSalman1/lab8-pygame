@@ -13,6 +13,7 @@ def check_collision(bigger: dict, smaller: dict) -> bool:
     sx = smaller["x"] + smaller["size"] / 2
     sy = smaller["y"] + smaller["size"] / 2
     dist = ((bx - sx) ** 2 + (by - sy) ** 2) ** 0.5
+    # returns true in case of collision
     
     return dist < (bigger["size"] + smaller["size"]) / 2
 
