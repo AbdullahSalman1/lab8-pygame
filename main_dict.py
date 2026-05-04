@@ -217,26 +217,43 @@ def run() -> None:
 
         squares = new_squares
 
-        # --- Eating logic ---
+        
         eaten_indices = set()
         respawn_list = []
+        eaten_pairs = []  
         for i, big in enumerate(squares):
             for j, small in enumerate(squares):
                 if i == j:
                     continue
                 if check_collision(big, small):
                     eaten_indices.add(j)
-                    # Save respawn info (original size)
                     respawn_list.append(small["size"])
+                    eaten_pairs.append((i, small["size"]))
 
-        # Remove eaten squares and respawn them
+
+        # Predator grows after eating and speed is adjusted
+        for predator_idx, prey_size in eaten_pairs:
+            predator = squares[predator_idx]
+            # Grow by 50% of prey's size, capped at MAX_SIZE
+            growth = 0.5 * prey_size
+            predator["size"] = min(predator["size"] + growth, MAX_SIZE)
+            # Adjust speed: bigger = slower
+            speed = ((MAX_SIZE - predator["size"]) / (MAX_SIZE - MIN_SIZE)) * (MAX_SPEED - 1) + 1
+            # Keep direction, adjust magnitude
+            v_norm = (predator["vx"] ** 2 + predator["vy"] ** 2) ** 0.5
+            if v_norm != 0:
+                scale = speed / v_norm
+                predator["vx"] *= scale
+                predator["vy"] *= scale
+
+        
         new_squares2 = []
         for idx, square in enumerate(squares):
             if idx not in eaten_indices:
                 new_squares2.append(square)
         for orig_size in respawn_list:
             sq = create_square()
-            sq["size"] = orig_size  # respawn with original size
+            sq["size"] = orig_size 
             new_squares2.append(sq)
         squares = new_squares2
 
