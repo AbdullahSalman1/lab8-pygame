@@ -31,17 +31,17 @@ def check_collision(bigger: dict, smaller: dict) -> bool:
     # returns true in case of collision
     
     return dist < (bigger["size"] + smaller["size"]) / 2
-# eaten_list = []
-# def helper_collision_function(a,b):
-#     if a["size"] < b["size"]:
-#         return False
+eaten_list = []
+def helper_collision_function(a,b):
+    if a["size"] < b["size"]:
+        return False
     
-#     Hx = a["x"] + a["size"] / 2
-#     Hy = a["y"] + a["size"] / 2
-#     Vx = b["x"] + b["size"] / 2
-#     Vy = b["y"] +  b["size"] / 2
-#     dist = ((Hx - Vx)**2 + (Hy-Vy)**2)**0.5
-#     eaten_list = 
+    Hx = a["x"] + a["size"] / 2
+    Hy = a["y"] + a["size"] / 2
+    Vx = b["x"] + b["size"] / 2
+    Vy = b["y"] +  b["size"] / 2
+    dist = ((Hx - Vx)**2 + (Hy-Vy)**2)**0.5
+    eaten_list = 
 
 
 

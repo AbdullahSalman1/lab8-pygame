@@ -55,7 +55,11 @@ class Boid:
 
     # TODO: Implement speed clamping to ensure boids don't exceed max speed
     def _clampSpeed(self) -> None:
-        pass
+        speed = math.hypot(self.vx, self.vy)
+        if speed > self.speed:
+            scale = self.speed / speed
+            self.vx *= scale
+            self.vy *= scale
 
     # TODO: Implement Screen Wrapping
     # Screen wrapping: if a boid goes off one edge of the screen, 
@@ -144,7 +148,7 @@ class Boid:
                 count += 1
         if count > 0:
             avg_velocity /= count
-            
+            # Steering = desired - current velocity
             steer = avg_velocity - pygame.Vector2(self.vx, self.vy)
             return steer
         else:
@@ -156,8 +160,23 @@ class Boid:
     # Then divide by the number of nearby boids to get the average position, 
     # and subtract the current boid's position to get the cohesion steering force.
     def _cohesion(self, boids: List['Boid']) -> pygame.Vector2:
-        steer : pygame.Vector2 = pygame.Vector2(0, 0)
-        return steer
+        # Cohesion: steer toward the average position of nearby boids
+        avg_position = pygame.Vector2(0, 0)
+        count = 0
+        for other in boids:
+            if other is self:
+                continue
+            dist = math.hypot(self.x - other.x, self.y - other.y)
+            if dist < config.COHESION_DISTANCE:
+                avg_position += pygame.Vector2(other.x, other.y)
+                count += 1
+        if count > 0:
+            avg_position /= count
+            # Steering = desired position - current position
+            steer = avg_position - pygame.Vector2(self.x, self.y)
+            return steer
+        else:
+            return pygame.Vector2(0, 0)
         
 
     # TODO: Use _random_steer, _separation, _alignment and _cohesion in update()
@@ -176,6 +195,7 @@ class Boid:
 
         self._random_steer()
 
+
         # Apply separation if enabled
         if config.SEPARATION_ON:
             separation_force = self._separation(boids)
@@ -187,6 +207,16 @@ class Boid:
             alignment_force = self._alignment(boids)
             self.vx += alignment_force.x * getattr(config, 'ALIGNEMENT_STEER_STRENGTH', 0.8) * dt_seconds
             self.vy += alignment_force.y * getattr(config, 'ALIGNEMENT_STEER_STRENGTH', 0.8) * dt_seconds
+
+        # Apply cohesion if enabled
+        if getattr(config, 'COHESION_ON', False):
+            cohesion_force = self._cohesion(boids)
+            self.vx += cohesion_force.x * getattr(config, 'COHESION_STEER_STRENGTH', 5) * dt_seconds
+            self.vy += cohesion_force.y * getattr(config, 'COHESION_STEER_STRENGTH', 5) * dt_seconds
+
+
+        # Clamp speed to max for this boid
+        self._clampSpeed()
 
         # Update the boid's position based on its velocity.
         self.x += self.vx * dt_seconds
