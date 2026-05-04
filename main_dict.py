@@ -1,7 +1,22 @@
 
 
+
 import random
 import pygame
+
+
+
+# Window and simulation constants
+WIDTH = 800
+HEIGHT = 600
+FPS = 100
+SQUARE_COUNT = 25
+MIN_SIZE = 20
+MAX_SIZE = 80
+MAX_SPEED = 8
+BACKGROUND_COLOR = (25, 25, 35)
+SQUARE_LIFESPAN = 1000
+GROWTH_SPEED = 500
 
 def check_collision(bigger: dict, smaller: dict) -> bool:
     
@@ -100,16 +115,6 @@ def chase_towards(bigger_square, smaller_square):
     bigger_square["vy"] = norm_dy * speed
 
 
-# Window and simulation constants
-WIDTH = 800
-HEIGHT = 600
-FPS = 100
-SQUARE_COUNT = 25
-MIN_SIZE = 20
-MAX_SIZE = 80
-MAX_SPEED = 8
-BACKGROUND_COLOR = (25, 25, 35)
-SQUARE_LIFESPAN = 1000
 
 
 
@@ -236,9 +241,10 @@ def run() -> None:
         squares = new_squares
 
         
+
         eaten_indices = set()
         respawn_list = []
-        eaten_pairs = []  
+        eaten_pairs = []
         for i, big in enumerate(squares):
             for j, small in enumerate(squares):
                 if i == j:
@@ -248,21 +254,39 @@ def run() -> None:
                     respawn_list.append(small["size"])
                     eaten_pairs.append((i, small["size"]))
 
-
-        # Predator grows after eating and speed is adjusted
+        # Predator grows after eating, but animated over GROWTH_SPEED
+        now = pygame.time.get_ticks()
         for predator_idx, prey_size in eaten_pairs:
             predator = squares[predator_idx]
-            # Grow by 50% of prey's size, capped at MAX_SIZE
             growth = 0.5 * prey_size
-            predator["size"] = min(predator["size"] + growth, MAX_SIZE)
-            # Adjust speed: bigger = slower
-            speed = ((MAX_SIZE - predator["size"]) / (MAX_SIZE - MIN_SIZE)) * (MAX_SPEED - 1) + 1
-            # Keep direction, adjust magnitude
-            v_norm = (predator["vx"] ** 2 + predator["vy"] ** 2) ** 0.5
-            if v_norm != 0:
-                scale = speed / v_norm
-                predator["vx"] *= scale
-                predator["vy"] *= scale
+            target_size = min(predator["size"] + growth, MAX_SIZE)
+            # Start animated growth
+            predator["growth_start_size"] = predator["size"]
+            predator["growth_target"] = target_size
+            predator["growth_start_time"] = now
+
+        # Animate growth for all squares with a growth_target
+        for square in squares:
+            if "growth_target" in square:
+                start_size = square["growth_start_size"]
+                target_size = square["growth_target"]
+                start_time = square["growth_start_time"]
+                elapsed = now - start_time
+                if elapsed >= GROWTH_SPEED:
+                    square["size"] = target_size
+                    del square["growth_target"]
+                    del square["growth_start_size"]
+                    del square["growth_start_time"]
+                else:
+                    t = elapsed / GROWTH_SPEED
+                    square["size"] = start_size + (target_size - start_size) * t
+        
+                speed = ((MAX_SIZE - square["size"]) / (MAX_SIZE - MIN_SIZE)) * (MAX_SPEED - 1) + 1
+                v_norm = (square["vx"] ** 2 + square["vy"] ** 2) ** 0.5
+                if v_norm != 0:
+                    scale = speed / v_norm
+                    square["vx"] *= scale
+                    square["vy"] *= scale
 
         
         new_squares2 = []
@@ -271,7 +295,11 @@ def run() -> None:
                 new_squares2.append(square)
         for orig_size in respawn_list:
             sq = create_square()
-            sq["size"] = orig_size 
+            sq["size"] = orig_size
+            # Ensure respawned squares do not have growth state
+            for k in ["growth_target", "growth_start_size", "growth_start_time"]:
+                if k in sq:
+                    del sq[k]
             new_squares2.append(sq)
         squares = new_squares2
 
