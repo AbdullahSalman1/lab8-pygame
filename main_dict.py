@@ -32,6 +32,14 @@ def check_collision(bigger: dict, smaller: dict) -> bool:
     
     return dist < (bigger["size"] + smaller["size"]) / 2
 
+# def helper_collision_function(a,b):
+#     if a["size"] < b["size"]:
+#         return False
+    
+#     Hx = a["x"] + a["size"] / 2
+#     Hy = a["y"] + a["size"] / 2
+#     Vx = b["x"] + 
+
 
 
 def calculate_distance(pos1: tuple[float, float], pos2: tuple[float, float]) -> float:

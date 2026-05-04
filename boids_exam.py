@@ -59,7 +59,16 @@ class Boid:
     # Screen wrapping: if a boid goes off one edge of the screen, 
     # it should reappear on the opposite edge
     def _screen_wrap(self) -> None:
-        pass
+        if self.x < 0:
+            self.x+= config.WIDTH
+        elif self.x > config.WIDTH:
+            self.x-= config.WIDTH
+        if self.y < 0:
+            self.y+= config.HEIGHT
+        elif self.y > config.HEIGHT:
+            self.y-= config.HEIGHT
+        
+        
     
     # Default wall behavior is bounce: if a boid hits the edge of the screen, 
     # it should bounce back in the opposite direction
@@ -74,7 +83,10 @@ class Boid:
     # TODO: Implement Random Steering of the velocity vector to create more natural movement
     def _random_steer(self, spread: float = 0.2) -> None:
         # # Randomly steer a bit to create more natural movement
-        pass
+        
+
+
+        
 
 
     # TODO: Implement the three main boid behaviors: separation, alignment, and cohesion
