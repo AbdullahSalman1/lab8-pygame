@@ -1,7 +1,21 @@
-from __future__ import annotations
+
 
 import random
 import pygame
+
+def check_collision(bigger: dict, smaller: dict) -> bool:
+    
+    if bigger["size"] <= smaller["size"]:
+        return False
+
+    bx = bigger["x"] + bigger["size"] / 2
+    by = bigger["y"] + bigger["size"] / 2
+    sx = smaller["x"] + smaller["size"] / 2
+    sy = smaller["y"] + smaller["size"] / 2
+    dist = ((bx - sx) ** 2 + (by - sy) ** 2) ** 0.5
+    
+    return dist < (bigger["size"] + smaller["size"]) / 2
+
 
 
 def calculate_distance(pos1: tuple[float, float], pos2: tuple[float, float]) -> float:
@@ -10,15 +24,6 @@ def calculate_distance(pos1: tuple[float, float], pos2: tuple[float, float]) -> 
     dy = pos1[1] - pos2[1]
     return (dx**2 + dy**2) ** 0.5
 
-
-# def should_flee(small_square: dict, big_square: dict, flee_radius: float) -> bool:
-#     """Determine if the small square should flee from the big square."""
-#
-#     small_pos = (small_square["x"] + small_square["size"] / 2, small_square["y"] + small_square["size"] / 2)
-#     big_pos = (big_square["x"] + big_square["size"] / 2, big_square["y"] + big_square["size"] / 2)
-#
-#     distance = calculate_distance(small_pos, big_pos)
-#     return distance < flee_radius
 
 
 def is_close_enough(square1: dict, square2: dict, radius: float) -> bool:
@@ -198,6 +203,7 @@ def run() -> None:
     font = pygame.font.SysFont("Arial", 20)  # FIXED: moved outside loop
 
     running = True
+
     while running:
         running = handle_events()
 
@@ -211,16 +217,38 @@ def run() -> None:
 
         squares = new_squares
 
+        # --- Eating logic ---
+        eaten_indices = set()
+        respawn_list = []
+        for i, big in enumerate(squares):
+            for j, small in enumerate(squares):
+                if i == j:
+                    continue
+                if check_collision(big, small):
+                    eaten_indices.add(j)
+                    # Save respawn info (original size)
+                    respawn_list.append(small["size"])
+
+        # Remove eaten squares and respawn them
+        new_squares2 = []
+        for idx, square in enumerate(squares):
+            if idx not in eaten_indices:
+                new_squares2.append(square)
+        for orig_size in respawn_list:
+            sq = create_square()
+            sq["size"] = orig_size  # respawn with original size
+            new_squares2.append(sq)
+        squares = new_squares2
+
+        # Flee/chase logic (unchanged)
         for small in squares:
             for big in squares:
                 if small is big:
                     continue
-
                 if small["size"] < big["size"]:
                     if is_close_enough(small, big, 120):
                         flee_away(small, big)
-
-                    elif is_close_enough(big, small, 200):  # FIXED: elif prevents overwrite
+                    elif is_close_enough(big, small, 200):
                         chase_towards(big, small)
 
         for square in squares:
