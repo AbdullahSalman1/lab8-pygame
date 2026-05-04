@@ -111,6 +111,7 @@ BACKGROUND_COLOR = (25, 25, 35)
 SQUARE_LIFESPAN = 1000
 
 
+
 def random_color() -> tuple[int, int, int]:
     """Return a random RGB color."""
     return (
@@ -145,8 +146,29 @@ def create_square() -> dict:
     }
 
 
+
 def create_squares(count: int) -> list[dict]:
     return [create_square() for _ in range(count)]
+
+# New function to create a custom mix of squares
+def create_mixed_squares() -> list[dict]:
+    squares = []
+    # 5 squares of size 25
+    for i in range(5):
+        sq = create_square()
+        sq["size"] = 25
+        squares.append(sq)
+    # 10 squares of size 10
+    for i in range(10):
+        sq = create_square()
+        sq["size"] = 10
+        squares.append(sq)
+    # 30 squares of size 4
+    for i in range(30):
+        sq = create_square()
+        sq["size"] = 4
+        squares.append(sq)
+    return squares
 
 
 def update_square(square: dict) -> None:
@@ -192,13 +214,14 @@ def handle_events() -> bool:
     return True
 
 
+
 def run() -> None:
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    pygame.display.set_caption("10 Random Moving Squares (Dictionary Version)")
+    pygame.display.set_caption("Mixed Size Squares (Dictionary Version)")
     clock = pygame.time.Clock()
 
-    squares = create_squares(SQUARE_COUNT)
+    squares = create_mixed_squares()
 
     font = pygame.font.SysFont("Arial", 20)  # FIXED: moved outside loop
 
