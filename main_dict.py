@@ -150,8 +150,8 @@ def create_square() -> dict:
 def create_squares(count: int) -> list[dict]:
     return [create_square() for _ in range(count)]
 
-# New function to create a custom mix of squares
-def create_mixed_squares() -> list[dict]:
+
+def create_mixed_squares():
     squares = []
     # 5 squares of size 25
     for i in range(5):
@@ -175,23 +175,17 @@ def update_square(square: dict) -> None:
     square["x"] += square["vx"]
     square["y"] += square["vy"]
 
-    # Horizontal bounce
-    if square["x"] < 0:
-        square["x"] = 0
-        square["vx"] *= -1
+    # Screen wrapping horizontally
+    if square["x"] + square["size"] < 0:
+        square["x"] = WIDTH
+    elif square["x"] > WIDTH:
+        square["x"] = -square["size"]
 
-    elif square["x"] + square["size"] > WIDTH:
-        square["x"] = WIDTH - square["size"]
-        square["vx"] *= -1
-
-    # Vertical bounce
-    if square["y"] < 0:
-        square["y"] = 0
-        square["vy"] *= -1
-
-    elif square["y"] + square["size"] > HEIGHT:
-        square["y"] = HEIGHT - square["size"]
-        square["vy"] *= -1
+    # Screen wrapping vertically
+    if square["y"] + square["size"] < 0:
+        square["y"] = HEIGHT
+    elif square["y"] > HEIGHT:
+        square["y"] = -square["size"]
 
 
 def draw_square(screen: pygame.Surface, square: dict) -> None:
